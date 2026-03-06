@@ -1,0 +1,25 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Star_Tracker.App"
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.Styles>
+        <FluentTheme />
+        
+        <!-- Mount Control Button Style -->
+        <Style Selector="Button.MountControlButton">
+            <Setter Property="Background" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Application.Styles>
+    <Application.Resources>
+		<SolidColorBrush x:Key="BackgroundBrush" Color="#000000"/>
+        <SolidColorBrush x:Key="ForegroundBrush" Color="#ad2931"/> <!-- #7a1c22 -->
+        <SolidColorBrush x:Key="CameraViewBackground" Color="#090909"/>
+
+    </Application.Resources>
+</Application>

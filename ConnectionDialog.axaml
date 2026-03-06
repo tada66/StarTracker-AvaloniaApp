@@ -1,0 +1,81 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="320"
+        x:Class="Star_Tracker.ConnectionDialog"
+        Title="Connect to Device"
+        Width="460" Height="320"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+
+    <Grid RowDefinitions="Auto, *, Auto, Auto" Margin="24">
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="Looking for device..."
+                   Foreground="{DynamicResource ForegroundBrush}"
+                   FontSize="20" FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,16"
+                   x:Name="HeaderText"/>
+
+        <!-- Discovery list -->
+        <Border Grid.Row="1" BorderBrush="{DynamicResource ForegroundBrush}" BorderThickness="1"
+                CornerRadius="4" Padding="4" Margin="0,0,0,12">
+            <Grid RowDefinitions="*, Auto">
+                <ListBox Grid.Row="0"
+                         x:Name="DeviceList"
+                         Background="Transparent"
+                         Foreground="{DynamicResource ForegroundBrush}"
+                         BorderThickness="0"
+                         SelectionChanged="DeviceList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" Foreground="{DynamicResource ForegroundBrush}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <!-- Scanning indicator -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                            Margin="0,4,0,0" x:Name="ScanningPanel">
+                    <TextBlock Text="Scanning network..."
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               FontSize="11" Opacity="0.6"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Manual IP entry -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,12">
+            <TextBlock Grid.Column="0"
+                       Text="Manual IP:"
+                       Foreground="{DynamicResource ForegroundBrush}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+            <TextBox Grid.Column="1"
+                     x:Name="ManualIpBox"
+                     BorderBrush="{DynamicResource ForegroundBrush}"
+                     Watermark="192.168.1.100"
+                     Padding="6,4"
+                     KeyDown="ManualIpBox_KeyDown"/>
+            <Button Grid.Column="2"
+                    Classes="MountControlButton"
+                    Content="Connect"
+                    Margin="8,0,0,0"
+                    Padding="12,4"
+                    Click="ConnectManual_Click"
+                    x:Name="ConnectManualButton"/>
+        </Grid>
+
+        <!-- Status / error text -->
+        <TextBlock Grid.Row="3"
+                   x:Name="StatusText"
+                   Foreground="{DynamicResource ForegroundBrush}"
+                   FontSize="12"
+                   HorizontalAlignment="Center"
+                   Opacity="0.8"
+                   TextWrapping="Wrap"/>
+    </Grid>
+</Window>

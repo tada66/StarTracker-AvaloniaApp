@@ -1,0 +1,385 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:Star_Tracker.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="Star_Tracker.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        MinWidth="900" MinHeight="600"
+        Title="Star Tracker">
+    <Grid ShowGridLines="False" Background="{DynamicResource ResourceKey=BackgroundBrush}" ColumnDefinitions="*, Auto">
+        
+        <Grid ShowGridLines="False" Grid.Column="0" RowDefinitions="*, Auto">
+            <!-- Camera View (Live View) -->
+            <Border Grid.Row="0" BorderBrush="{DynamicResource ForegroundBrush}" BorderThickness="0,0,1,1">
+                <Grid Background="{DynamicResource CameraViewBackground}">
+                    <Image Source="{Binding LiveViewFrame}"
+                           Stretch="Uniform"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+                    <TextBlock Text="No Live View"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               FontSize="18" Opacity="0.4"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding LiveViewFrame, Converter={x:Static ObjectConverters.IsNull}}"/>
+
+                    <!-- FPS overlay (top-left) -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                Margin="8,4" Opacity="0.7" IsVisible="{Binding IsLiveViewActive}">
+                        <TextBlock Foreground="#CCCCCC" FontSize="11" FontFamily="Courier New"
+                                   Text="{Binding LiveViewFps, StringFormat={}{0:F1} fps}"/>
+                    </StackPanel>
+
+                    <!-- Reference Lost warning banner -->
+                    <Border Background="#CC880000" Padding="12,8"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="40,4,40,0"
+                            CornerRadius="4" IsVisible="{Binding ReferenceLost}">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Grid.Column="0" Foreground="White" FontSize="14" FontWeight="Bold"
+                                       Text="WARNING: Mount reference lost! Alignment has been invalidated."
+                                       VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Dismiss" Padding="8,2"
+                                    Command="{Binding DismissReferenceWarningCommand}"
+                                    Classes="MountControlButton"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Error toast (bottom-center) -->
+                    <Border Background="#DD333333" CornerRadius="4" Padding="14,8"
+                            HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,12"
+                            IsVisible="{Binding IsErrorVisible}" MaxWidth="600">
+                        <Grid ColumnDefinitions="*, Auto" >
+                            <TextBlock Grid.Column="0" Foreground="#FF6666" FontSize="12"
+                                       Text="{Binding ErrorMessage}" TextWrapping="Wrap"
+                                       VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <Button Grid.Column="1" Content="X" Padding="4,1" FontSize="10"
+                                    Command="{Binding DismissErrorCommand}"
+                                    Classes="MountControlButton"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+            <!-- Mount control -->
+            <Border Grid.Row="1" BorderBrush="{DynamicResource ForegroundBrush}" BorderThickness="0,1,1,0"
+                    Background="{DynamicResource CameraViewBackground}" Padding="10">
+                <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                <Grid ColumnDefinitions="Auto, Auto, Auto, Auto, Auto" HorizontalAlignment="Center">
+                    
+                    <!-- Section 1: Motor & Movement Controls + Mount Status -->
+                    <StackPanel Grid.Column="0" Margin="0,0,20,0" VerticalAlignment="Center">
+                        <Button Classes="MountControlButton" Content="{Binding StopEnableButtonText}" Padding="20,12"
+                                Width="160" HorizontalContentAlignment="Center"
+                                Command="{Binding StopMotorsCommand}"/>
+                        <Button Classes="MountControlButton" Content="{Binding PauseResumeButtonText}" Padding="8,6"
+                                Width="160" HorizontalContentAlignment="Center"
+                                Command="{Binding PauseResumeMovementCommand}"
+                                IsVisible="{Binding MotorsEnabled}"/>
+                    </StackPanel>
+
+                    <!-- Section 1b: Mount Status Info -->
+                    <StackPanel Grid.Column="1" Margin="0,0,20,0" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Mount Status" Foreground="{DynamicResource ForegroundBrush}"
+                                   FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                        <Grid ColumnDefinitions="Auto, Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" Margin="0">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="X: " Foreground="{DynamicResource ForegroundBrush}" FontSize="11" Margin="0,0,4,0"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding MountXDisplay}" Foreground="{DynamicResource ForegroundBrush}" FontSize="11" FontFamily="Courier New"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Y: " Foreground="{DynamicResource ForegroundBrush}" FontSize="11" Margin="0,0,4,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MountYDisplay}" Foreground="{DynamicResource ForegroundBrush}" FontSize="11" FontFamily="Courier New"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Z: " Foreground="{DynamicResource ForegroundBrush}" FontSize="11" Margin="0,0,4,0"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MountZDisplay}" Foreground="{DynamicResource ForegroundBrush}" FontSize="11" FontFamily="Courier New"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Temp: " Foreground="{DynamicResource ForegroundBrush}" FontSize="11" Margin="0,0,4,0"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding MountTempDisplay}" Foreground="{DynamicResource ForegroundBrush}" FontSize="11" FontFamily="Courier New"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Motors: " Foreground="{DynamicResource ForegroundBrush}" FontSize="11" Margin="0,0,4,0"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding MotorStateDisplay}" Foreground="{DynamicResource ForegroundBrush}" FontSize="11" FontFamily="Courier New"/>
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Fan: " Foreground="{DynamicResource ForegroundBrush}" FontSize="11" Margin="0,0,4,0"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding FanSpeedDisplay}" Foreground="{DynamicResource ForegroundBrush}" FontSize="11" FontFamily="Courier New"/>
+                        </Grid>
+                    </StackPanel>
+                    
+                    <!-- Section 2: Tracked Position -->
+                    <StackPanel Grid.Column="2" Margin="0,0,20,0" VerticalAlignment="Center">
+                        <TextBlock Text="Tracked position" Foreground="{DynamicResource ForegroundBrush}" 
+                                   FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                        <Grid ColumnDefinitions="Auto, 140" RowDefinitions="Auto, Auto, Auto" Margin="0,0,0,0">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="RA:" 
+                                       Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center" Margin="0,0,5,2"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" 
+                                     Text="{Binding CurrentRa, Mode=TwoWay}"
+                                     BorderBrush="{DynamicResource ForegroundBrush}" Watermark="HH:MM:SS.SS" 
+                                     Padding="4,2" FontFamily="Courier New" FontSize="12"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Dec:" 
+                                       Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center" Margin="0,0,5,2"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" 
+                                     Text="{Binding CurrentDec, Mode=TwoWay}"
+                                     BorderBrush="{DynamicResource ForegroundBrush}" Watermark="±DD:MM:SS.S" 
+                                     Padding="4,2" FontFamily="Courier New" FontSize="12"/>
+                            <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="MountControlButton" 
+                                    Content="Track" Padding="8,3" Margin="0,4,0,0"
+                                    Command="{Binding GoTrackCommand}"/>
+                        </Grid>
+                    </StackPanel>
+                    
+                    <!-- Section 3: Calibration Point -->
+                    <StackPanel Grid.Column="3" Margin="0,0,20,0" VerticalAlignment="Center">
+                        <TextBlock Text="Add Calibration Point" Foreground="{DynamicResource ForegroundBrush}" 
+                                   FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                        <Grid ColumnDefinitions="Auto, 140" RowDefinitions="Auto, Auto, Auto" Margin="0,0,0,0">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="RA:" 
+                                       Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center" Margin="0,0,5,2"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" 
+                                     Text="{Binding CalibrationRa, Mode=TwoWay}"
+                                     BorderBrush="{DynamicResource ForegroundBrush}" Watermark="HH:MM:SS.SS" 
+                                     Padding="4,2" FontFamily="Courier New" FontSize="12"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Dec:" 
+                                       Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center" Margin="0,0,5,2"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" 
+                                     Text="{Binding CalibrationDec, Mode=TwoWay}"
+                                     BorderBrush="{DynamicResource ForegroundBrush}" Watermark="±DD:MM:SS.S" 
+                                     Padding="4,2" FontFamily="Courier New" FontSize="12"/>
+                            <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Classes="MountControlButton" 
+                                    Content="Add point" Padding="8,3" Margin="0,4,0,0"
+                                    Command="{Binding AddCalibrationPointCommand}"/>
+                        </Grid>
+                    </StackPanel>
+                    
+                    <!-- Section 4: Calibration Status & Actions -->
+                    <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                        <TextBlock Text="Calibration" Foreground="{DynamicResource ForegroundBrush}" 
+                                   FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6" Margin="0,0,0,4">
+                            <Grid Width="12" Height="12">
+                                <Ellipse Width="12" Height="12" Fill="#44FF44" IsVisible="{Binding IsAligned}"/>
+                                <Ellipse Width="12" Height="12" Fill="#FF4444" IsVisible="{Binding !IsAligned}"/>
+                            </Grid>
+                            <TextBlock Foreground="{DynamicResource ForegroundBrush}" Text="{Binding CalibrationStatusText}" 
+                                       VerticalAlignment="Center" FontSize="12"/>
+                        </StackPanel>
+                        
+                        <StackPanel HorizontalAlignment="Center" IsVisible="{Binding HasAlignmentQuality}" Margin="0,0,0,6">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="Quality:" Foreground="{DynamicResource ForegroundBrush}" FontSize="11" Opacity="0.8"/>
+                                <TextBlock Text="{Binding AlignmentQuality}" Foreground="{Binding AlignmentQualityColor}" FontSize="11" FontWeight="Bold"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding AlignmentResidualsText}" Foreground="{DynamicResource ForegroundBrush}" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                            <TextBlock Text="{Binding AlignmentStarsText}" Foreground="{DynamicResource ForegroundBrush}" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                        </StackPanel>
+                        
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
+                            <Button Classes="MountControlButton" Content="Finalize" Padding="8,4"
+                                    Command="{Binding FinalizeCalibrationCommand}"/>
+                            <Button Classes="MountControlButton" Content="Discard" Padding="8,4"
+                                    Command="{Binding DiscardCalibrationCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                </Grid>
+                </Viewbox>
+            </Border>
+        </Grid>
+        
+        <!-- Right Panel with camera controls -->
+        <Grid ShowGridLines="False" Grid.Column="1" RowDefinitions="*, Auto">
+            <Viewbox Grid.Row="0" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Top">
+                <StackPanel>
+                <Grid ShowGridLines="False" ColumnDefinitions="*, Auto">
+                    <Image Grid.Column="0" 
+                           Source="{ SvgImage Assets/Images/camera.svg}"
+                           Width="64"></Image>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Margin="5, 5, 5, 0"
+                                   FontSize="24" 
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource ForegroundBrush}"
+                                   Width="200"
+                                   Text="{Binding CameraName}">
+                        </TextBlock>
+                        <TextBlock FontSize="16" 
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource ForegroundBrush}"
+                                   Text="{Binding BatteryDisplay}">
+                        </TextBlock>
+                        <!-- Connection status -->
+                        <TextBlock FontSize="11" 
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource ForegroundBrush}"
+                                   Opacity="0.7"
+                                   Text="{Binding ConnectionStatus}"/>
+                        <!-- Camera connect/disconnect button -->
+                        <Button HorizontalAlignment="Center" Margin="0,4,0,0"
+                                Classes="MountControlButton" Padding="12,4" Width="160" HorizontalContentAlignment="Center"
+                                Content="{Binding CameraConnectButtonText}"
+                                Command="{Binding ConnectDisconnectCameraCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <!-- Camera controls: disabled when camera not connected -->
+                <StackPanel IsEnabled="{Binding IsCameraConnected}">
+                <StackPanel Margin="5">
+                    <!-- ISO -->
+                    <Grid ColumnDefinitions="Auto, *" Margin="0,5,0,0">
+                        <TextBlock Grid.Column="0"
+                                   Foreground="{DynamicResource ForegroundBrush}"
+                                   Text="ISO: "
+                                   VerticalAlignment="Center">
+                        </TextBlock>
+                        <ComboBox BorderBrush="{DynamicResource ForegroundBrush}" Grid.Column="1"
+                                  ItemsSource="{Binding AvailableIsoValues}"
+                                  SelectedItem="{Binding SelectedIso}"/>
+                    </Grid>
+                    <!-- Shutter Speed (Editable ComboBox) -->
+                    <Grid ColumnDefinitions="Auto, *" Margin="0,5,0,0">
+                        <TextBlock Grid.Column="0"
+                                   Foreground="{DynamicResource ForegroundBrush}"
+                                   Text="Shutter Speed: "
+                                   VerticalAlignment="Center">
+                        </TextBlock>
+                        <ComboBox x:Name="ShutterSpeedComboBox"
+                                  BorderBrush="{DynamicResource ForegroundBrush}" Grid.Column="1"
+                                  ItemsSource="{Binding AvailableShutterSpeeds}"
+                                  SelectedItem="{Binding SelectedShutterSpeed}"
+                                  IsEditable="True"
+                                  Text="{Binding ShutterSpeedText, Mode=OneWay}"
+                                  KeyDown="ShutterSpeedComboBox_KeyDown">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                    <!-- Bulb Duration (visible only in Bulb mode) -->
+                    <Grid ColumnDefinitions="Auto, *" Margin="0,5,0,0" IsVisible="{Binding IsBulbMode}">
+                        <TextBlock Grid.Column="0"
+                                   Foreground="{DynamicResource ForegroundBrush}"
+                                   Text="Bulb Duration: "
+                                   VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                            <NumericUpDown BorderBrush="{DynamicResource ForegroundBrush}"
+                                           Value="{Binding BulbDurationSeconds}"
+                                           Minimum="0.1" Maximum="3600" Increment="5"
+                                           FormatString="0.#" Width="120"/>
+                            <TextBlock Foreground="{DynamicResource ForegroundBrush}" Text="sec"
+                                       VerticalAlignment="Center" Opacity="0.7" FontSize="12"/>
+                        </StackPanel>
+                    </Grid>
+                    <!-- Aperture -->
+                    <Grid ColumnDefinitions="Auto, *" Margin="0,5,0,0">
+                        <TextBlock Grid.Column="0"
+                                   Foreground="{DynamicResource ForegroundBrush}"
+                                   Text="Aperture: "
+                                   VerticalAlignment="Center">
+                        </TextBlock>
+                        <ComboBox BorderBrush="{DynamicResource ForegroundBrush}" Grid.Column="1"
+                                  ItemsSource="{Binding AvailableApertures}"
+                                  SelectedItem="{Binding SelectedAperture}"/>
+                    </Grid>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,2">
+                    <Button Classes="MountControlButton" Content="Magnify"
+                            Command="{Binding MagnifyCommand}"/>
+                    <Button Classes="MountControlButton" Content="Magnify Off"
+                            Command="{Binding MagnifyOffCommand}"/>
+                </StackPanel>
+                
+                <StackPanel Margin="5">
+                    <!-- Focus Mode -->
+                    <Grid ColumnDefinitions="Auto, *" Margin="0,5,0,0">
+                        <TextBlock Grid.Column="0"
+                                   Foreground="{DynamicResource ForegroundBrush}"
+                                   Text="Focus Mode: "
+                                   VerticalAlignment="Center">
+                        </TextBlock>
+                        <ComboBox BorderBrush="{DynamicResource ForegroundBrush}" Grid.Column="1"
+                                  ItemsSource="{Binding AvailableFocusModes}"
+                                  SelectedItem="{Binding SelectedFocusMode}"/>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,2" Spacing="5">
+                        <Button Classes="MountControlButton" Command="{Binding FocusFartherCommand}">Further</Button>
+                        <NumericUpDown BorderBrush="{DynamicResource ForegroundBrush}" Increment="1" FormatString="0"
+                                       Value="{Binding FocusStepCount}"/>
+                        <Button Classes="MountControlButton" Command="{Binding FocusCloserCommand}">Closer</Button>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Capture button with busy state -->
+                <Button HorizontalAlignment="Center" Margin="0,20,0,0" Classes="MountControlButton"
+                        Command="{Binding CaptureCommand}" Width="160" HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding !IsCapturing}"
+                        Content="{Binding CaptureButtonText, FallbackValue='Capture image'}"/>
+                <CheckBox HorizontalAlignment="Center" BorderBrush="{DynamicResource ForegroundBrush}"
+                          IsChecked="{Binding RepeatCapture}">
+                    <TextBlock FontSize="12" 
+                                       Foreground="{DynamicResource ForegroundBrush}"
+                                       Text="Repeat Capture">
+                    </TextBlock>
+                </CheckBox>
+                <!-- Last captured file -->
+                <TextBlock HorizontalAlignment="Center" FontSize="10" Opacity="0.6"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Text="{Binding LastCapturedFile}"
+                           IsVisible="{Binding LastCapturedFile, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                           Margin="0,2,0,0" TextTrimming="CharacterEllipsis" MaxWidth="250"/>
+                </StackPanel>
+            </StackPanel>
+            </Viewbox>
+            <!-- Mount Control Grid -->
+            <Viewbox Grid.Row="1" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Bottom" Margin="10">
+                <StackPanel>
+                    <TextBlock Text="Mount Control"
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,10"/>
+                <Grid HorizontalAlignment="Center"
+                      RowDefinitions="44,44,44,44,44"
+                      ColumnDefinitions="44,44,44,44,44">
+                    <!-- Coarse Up (top) -->
+                    <Button Grid.Row="0" Grid.Column="2" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountMoveUpCoarseCommand}">&#x25B2;</Button>
+                    <!-- Fine Up -->
+                    <Button Grid.Row="1" Grid.Column="2" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountMoveUpCommand}">&#x25B2;</Button>
+
+                    <!-- Coarse Left -->
+                    <Button Grid.Row="2" Grid.Column="0" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountMoveLeftCoarseCommand}">&#x25C0;</Button>
+                    <!-- Fine Left -->
+                    <Button Grid.Row="2" Grid.Column="1" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountMoveLeftCommand}">&#x25C0;</Button>
+                    
+                    <!-- Fine Right -->
+                    <Button Grid.Row="2" Grid.Column="3" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountMoveRightCommand}">&#x25B6;</Button>
+                    <!-- Coarse Right -->
+                    <Button Grid.Row="2" Grid.Column="4" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountMoveRightCoarseCommand}">&#x25B6;</Button>
+
+                    <!-- Fine Down -->
+                    <Button Grid.Row="3" Grid.Column="2" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountMoveDownCommand}">&#x25BC;</Button>
+                    <!-- Coarse Down (bottom) -->
+                    <Button Grid.Row="4" Grid.Column="2" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountMoveDownCoarseCommand}">&#x25BC;</Button>
+                </Grid>
+                <!-- Speed/Rate selector -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,5" Spacing="10">
+                    <TextBlock Foreground="{DynamicResource ForegroundBrush}"
+                               Text="Rate:" VerticalAlignment="Center"/>
+                    <NumericUpDown Width="120" BorderBrush="{DynamicResource ForegroundBrush}"
+                                   Minimum="1" Maximum="20" Value="{Binding MountMoveRate}" Increment="1" FormatString="0"/>
+                </StackPanel>
+                </StackPanel>
+            </Viewbox>
+        </Grid>
+    </Grid>
+</Window>
