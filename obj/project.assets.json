@@ -1668,11 +1668,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\tadeas\\source\\repos\\project\\Star Tracker\\Star Tracker.csproj",
+      "projectUniqueName": "C:\\Users\\tadeas\\RiderProjects\\StarTracker-AvaloniaApp\\Star Tracker.csproj",
       "projectName": "Star Tracker",
-      "projectPath": "C:\\Users\\tadeas\\source\\repos\\project\\Star Tracker\\Star Tracker.csproj",
+      "projectPath": "C:\\Users\\tadeas\\RiderProjects\\StarTracker-AvaloniaApp\\Star Tracker.csproj",
       "packagesPath": "C:\\Users\\tadeas\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\tadeas\\source\\repos\\project\\Star Tracker\\obj\\",
+      "outputPath": "C:\\Users\\tadeas\\RiderProjects\\StarTracker-AvaloniaApp\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1752,6 +1752,24 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[9.0.13, 9.0.13]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.win-x64",
+            "version": "[9.0.13, 9.0.13]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[9.0.13, 9.0.13]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[9.0.13, 9.0.13]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"

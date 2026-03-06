@@ -22,20 +22,20 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Star_Tracker
-build_property.ProjectDir = C:\Users\tadeas\source\repos\project\Star Tracker\
+build_property.ProjectDir = C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.EffectiveAnalysisLevelStyle = 9.0
 build_property.EnableCodeStyleSeverity = 
 
-[C:/Users/tadeas/source/repos/project/Star Tracker/App.axaml]
+[C:/Users/tadeas/RiderProjects/StarTracker-AvaloniaApp/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/Users/tadeas/source/repos/project/Star Tracker/ConnectionDialog.axaml]
+[C:/Users/tadeas/RiderProjects/StarTracker-AvaloniaApp/ConnectionDialog.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/Users/tadeas/source/repos/project/Star Tracker/MainWindow.axaml]
+[C:/Users/tadeas/RiderProjects/StarTracker-AvaloniaApp/MainWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[C:/Users/tadeas/source/repos/project/Star Tracker/Styles/AppDefaultStyles.axaml]
+[C:/Users/tadeas/RiderProjects/StarTracker-AvaloniaApp/Styles/AppDefaultStyles.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml

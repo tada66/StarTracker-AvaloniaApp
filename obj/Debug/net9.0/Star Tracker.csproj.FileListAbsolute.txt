@@ -80,3 +80,85 @@ C:\Users\tadeas\source\repos\project\Star Tracker\bin\Debug\net9.0\Svg.Custom.dl
 C:\Users\tadeas\source\repos\project\Star Tracker\bin\Debug\net9.0\Svg.Model.dll
 C:\Users\tadeas\source\repos\project\Star Tracker\bin\Debug\net9.0\Svg.Skia.dll
 C:\Users\tadeas\source\repos\project\Star Tracker\bin\Debug\net9.0\CommunityToolkit.Mvvm.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Star Tracker.exe
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Star Tracker.deps.json
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Star Tracker.runtimeconfig.json
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Star Tracker.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Star Tracker.pdb
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Base.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Controls.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.DesignerSupport.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Dialogs.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Markup.Xaml.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Markup.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Metal.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.MicroCom.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.OpenGL.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Vulkan.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Controls.ColorPicker.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Desktop.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Diagnostics.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Fonts.Inter.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.FreeDesktop.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Native.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Remote.Protocol.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Skia.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Svg.Skia.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Themes.Fluent.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Themes.Simple.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Win32.Automation.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.Win32.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Avalonia.X11.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\CommunityToolkit.Mvvm.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\ExCSS.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\HarfBuzzSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\MicroCom.Runtime.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\ShimSkiaSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\SkiaSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\SkiaSharp.HarfBuzz.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Svg.Custom.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Svg.Model.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Svg.Skia.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\Tmds.DBus.Protocol.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-arm64\native\av_libglesv2.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-x64\native\av_libglesv2.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-x86\native\av_libglesv2.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\osx\native\libAvaloniaNative.dylib
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-arm\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-arm64\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-loongarch64\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-musl-arm\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-musl-arm64\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-musl-loongarch64\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-musl-riscv64\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-musl-x64\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-riscv64\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-x64\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-x86\native\libHarfBuzzSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\osx\native\libHarfBuzzSharp.dylib
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-arm64\native\libHarfBuzzSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-x64\native\libHarfBuzzSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-x86\native\libHarfBuzzSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-arm\native\libSkiaSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-arm64\native\libSkiaSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-musl-x64\native\libSkiaSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\linux-x64\native\libSkiaSharp.so
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\osx\native\libSkiaSharp.dylib
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-arm64\native\libSkiaSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-x64\native\libSkiaSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\bin\Debug\net9.0\runtimes\win-x86\native\libSkiaSharp.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.csproj.AssemblyReference.cache
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Avalonia\Resources.Inputs.cache
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Avalonia\resources
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.AssemblyInfoInputs.cache
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.AssemblyInfo.cs
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.csproj.CoreCompileInputs.cache
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.sourcelink.json
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tra.6351728D.Up2Date
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\refint\Star Tracker.dll
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.pdb
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\Star Tracker.genruntimeconfig.cache
+C:\Users\tadeas\RiderProjects\StarTracker-AvaloniaApp\obj\Debug\net9.0\ref\Star Tracker.dll

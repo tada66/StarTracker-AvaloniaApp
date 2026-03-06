@@ -320,6 +320,19 @@ namespace Star_Tracker
             }
         }
 
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            
+            if (e.Key == Key.F11)
+            {
+                WindowState = WindowState == WindowState.FullScreen 
+                    ? WindowState.Normal 
+                    : WindowState.FullScreen;
+                e.Handled = true;
+            }
+        }
+
         /// <summary>
         /// Called when a key is pressed in the shutter speed ComboBox.
         /// Commits the value when Enter is pressed, reading text directly from the control.
