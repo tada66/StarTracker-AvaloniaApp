@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Star Tracker")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8a65602e3c65df7946a13945185ffe20061103c1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e80a69e63e8d4c08933f1d26901396c9b3f934f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("Star Tracker")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Star Tracker")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
