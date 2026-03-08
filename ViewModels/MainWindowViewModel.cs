@@ -539,13 +539,26 @@ public partial class MainWindowViewModel : ObservableObject
     // ── Load settings ────────────────────────────────────────────
 
     /// <summary>
-    /// Loads settings from the camera service. Call once after construction.
+    /// Loads settings from the camera service and initial mount status. Call once after construction.
     /// </summary>
     [RelayCommand]
     public async Task LoadSettings()
     {
         try
         {
+            if (_mountService is not null)
+            {
+                try
+                {
+                    var status = await _mountService.AlignmentStatusAsync();
+                    UpdateAlignmentStatus(status);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[ViewModel] Failed to load alignment status: {ex.Message}");
+                }
+            }
+
             var settings = await _cameraService.GetSettingsAsync();
 
             CameraName = settings.CameraName;
@@ -768,7 +781,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("x", (int)MountMoveRate * 100);
+            await _mountService.MoveRelativeAsync("x", (int)MountMoveRate * 30);
         }
         catch (Exception ex)
         {
@@ -782,7 +795,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("x", -(int)MountMoveRate * 100);
+            await _mountService.MoveRelativeAsync("x", -(int)MountMoveRate * 30);
         }
         catch (Exception ex)
         {
@@ -796,7 +809,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("z", (int)MountMoveRate * 100);
+            await _mountService.MoveRelativeAsync("z", (int)MountMoveRate * 30);
         }
         catch (Exception ex)
         {
@@ -810,7 +823,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("z", -(int)MountMoveRate * 100);
+            await _mountService.MoveRelativeAsync("z", -(int)MountMoveRate * 30);
         }
         catch (Exception ex)
         {
@@ -824,7 +837,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("x", (int)MountMoveRate * 2500);
+            await _mountService.MoveRelativeAsync("x", (int)MountMoveRate * 15000);
         }
         catch (Exception ex)
         {
@@ -838,7 +851,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("x", -(int)MountMoveRate * 2500);
+            await _mountService.MoveRelativeAsync("x", -(int)MountMoveRate * 15000);
         }
         catch (Exception ex)
         {
@@ -852,7 +865,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("z", (int)MountMoveRate * 2500);
+            await _mountService.MoveRelativeAsync("z", (int)MountMoveRate * 15000);
         }
         catch (Exception ex)
         {
@@ -866,7 +879,51 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("z", -(int)MountMoveRate * 2500);
+            await _mountService.MoveRelativeAsync("z", -(int)MountMoveRate * 15000);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ViewModel] Mount coarse move right failed: {ex.Message}");
+        }
+    }
+    
+    [RelayCommand]
+    private async Task MountHome()
+    {
+        if (_mountService is null) return;
+        try
+        {
+            await _mountService.MoveStaticAsync("z", 0);
+            await _mountService.MoveStaticAsync("y", 0);
+            await _mountService.MoveStaticAsync("x", 0);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ViewModel] Mount coarse move left failed: {ex.Message}");
+        }
+    }
+    
+    [RelayCommand]
+    private async Task MountTiltClockwise()
+    {
+        if (_mountService is null) return;
+        try
+        {
+            await _mountService.MoveRelativeAsync("y", (int)MountMoveRate * 15000);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ViewModel] Mount coarse move right failed: {ex.Message}");
+        }
+    }
+    
+    [RelayCommand]
+    private async Task MountTiltAnticlockwise()
+    {
+        if (_mountService is null) return;
+        try
+        {
+            await _mountService.MoveRelativeAsync("y", -(int)MountMoveRate * 15000);
         }
         catch (Exception ex)
         {

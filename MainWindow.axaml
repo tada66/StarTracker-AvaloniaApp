@@ -353,6 +353,29 @@
                 <Grid HorizontalAlignment="Center"
                       RowDefinitions="44,44,44,44,44"
                       ColumnDefinitions="44,44,44,44,44">
+                    
+                    <!-- Tilt counterclockwise -->
+                    <Button Grid.Row="0" Grid.Column="0" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountTiltAnticlockwiseCommand}">
+                        <TextBlock Text="&#x2939;" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock.RenderTransform>
+                                <RotateTransform Angle="45"/>
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Button>
+                    
+                    <!-- Tilt clockwise -->
+                    <Button Grid.Row="0" Grid.Column="4" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountTiltClockwiseCommand}">
+                        <TextBlock Text="&#x2938;" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock.RenderTransform>
+                                <RotateTransform Angle="-45"/>
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Button>
+                    
                     <!-- Coarse Up (top) -->
                     <Button Grid.Row="0" Grid.Column="2" Width="40" Height="40"
                             Classes="MountControlButton" FontSize="16"
@@ -370,6 +393,11 @@
                     <Button Grid.Row="2" Grid.Column="1" Width="40" Height="40"
                             Classes="MountControlButton" FontSize="16"
                             Command="{Binding MountMoveLeftCommand}">&#x25C0;</Button>
+                    
+                    <!-- Home -->
+                    <Button Grid.Row="2" Grid.Column="2" Width="40" Height="40"
+                            Classes="MountControlButton" FontSize="16"
+                            Command="{Binding MountHomeCommand}">&#x2302;</Button>
                     
                     <!-- Fine Right -->
                     <Button Grid.Row="2" Grid.Column="3" Width="40" Height="40"
@@ -394,7 +422,7 @@
                     <TextBlock Foreground="{DynamicResource ForegroundBrush}"
                                Text="Rate:" VerticalAlignment="Center"/>
                     <NumericUpDown Width="120" BorderBrush="{DynamicResource ForegroundBrush}"
-                                   Minimum="1" Maximum="20" Value="{Binding MountMoveRate}" Increment="1" FormatString="0"/>
+                                   Minimum="1" Maximum="5" Value="{Binding MountMoveRate}" Increment="1" FormatString="0"/>
                 </StackPanel>
                 </StackPanel>
             </Viewbox>
