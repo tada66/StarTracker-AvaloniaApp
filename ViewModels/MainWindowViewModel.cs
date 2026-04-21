@@ -462,11 +462,92 @@ public partial class MainWindowViewModel : ObservableObject
         {
             _mountService.MountStatusReceived += OnMountStatus;
             _mountService.MountPositionReceived += OnMountPosition;
+            _mountService.CalibrationUpdated += OnCalibrationUpdated;
+            _mountService.AutoCalibrateCompleted += OnAutoCalibrateCompleted;
+            _mountService.AutoCalibrateCancelled += OnAutoCalibrateCancelled;
+            _mountService.AutoCalibrateError += OnAutoCalibrateError;
+            _mountService.GuideProgressReceived += OnGuideProgressReceived;
+            _mountService.GuideCompleteReceived += OnGuideCompleteReceived;
             _mountService.ReferenceLost += OnReferenceLost;
         }
     }
 
     // ── Event handlers ───────────────────────────────────────────
+
+    private void OnGuideProgressReceived(GuideProgressEventPayload progress)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (IsGuiding)
+            {
+                var driftStatus = $"Drift: {progress.DriftPx:F1}px ({progress.DriftArcmin:F1}')";
+                var corrStatus = progress.CorrectionApplied 
+                    ? $"Corr: {progress.CorrXArcsec:F0}″x, {progress.CorrZArcsec:F0}″z" 
+                    : "No corr needed";
+                    
+                var limitStatus = progress.MaxCorrections > 0 ? $" (Corr {progress.Corrections}/{progress.MaxCorrections})" : $" (Corr {progress.Corrections})";
+
+                GuideStatus = $"Check #{progress.Check}{limitStatus}\n{driftStatus} | {corrStatus}";
+            }
+        });
+    }
+
+    private void OnGuideCompleteReceived(GuideCompleteEventPayload complete)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            IsGuiding = false;
+            GuideStatus = $"Ended: {complete.Reason}\nTotal checks: {complete.Checks}, Corr: {complete.Corrections}";
+        });
+    }
+
+    private void OnAutoCalibrateCompleted(AutoCalibrateCompleteEventPayload payload)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            IsAutoCalibrating = false;
+            AutoCalibrateStatus = $"Done in {payload.ElapsedSeconds:F0}s. Solved {payload.SolvedCount}/{payload.TotalPositions}. Quality: {payload.Quality}";
+            if (payload.AlignmentStatus is not null)
+                UpdateAlignmentStatus(payload.AlignmentStatus);
+        });
+    }
+
+    private void OnAutoCalibrateCancelled(AutoCalibrateCancelledEventPayload payload)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            IsAutoCalibrating = false;
+            AutoCalibrateStatus = "Cancelled.";
+            if (payload.AlignmentStatus is not null)
+                UpdateAlignmentStatus(payload.AlignmentStatus);
+        });
+    }
+
+    private void OnAutoCalibrateError(AutoCalibrateErrorEventPayload payload)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            IsAutoCalibrating = false;
+            AutoCalibrateStatus = "Error.";
+            if (!string.IsNullOrEmpty(payload.Message))
+                ShowError($"Auto-calibrate error: {payload.Message}");
+        });
+    }
+
+    private void OnCalibrationUpdated(CalibrationUpdateEventPayload info)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (IsAutoCalibrating)
+            {
+                AutoCalibrateStatus = $"Progress: {info.CurrentPosition}/{info.TotalPositions} (Stars: {info.PointCount})\nMsg: {info.Message}";
+                if (info.AlignmentStatus is not null)
+                {
+                    UpdateAlignmentStatus(info.AlignmentStatus);
+                }
+            }
+        });
+    }
 
     private void OnCameraStatus(CameraStatusEventPayload status)
     {
@@ -837,7 +918,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("x", (int)MountMoveRate * 15000);
+            await _mountService.MoveRelativeAsync("x", (int)MountMoveRate * 21600);
         }
         catch (Exception ex)
         {
@@ -851,7 +932,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("x", -(int)MountMoveRate * 15000);
+            await _mountService.MoveRelativeAsync("x", -(int)MountMoveRate * 21600);
         }
         catch (Exception ex)
         {
@@ -865,7 +946,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("z", (int)MountMoveRate * 15000);
+            await _mountService.MoveRelativeAsync("z", (int)MountMoveRate * 21600);
         }
         catch (Exception ex)
         {
@@ -879,7 +960,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_mountService is null) return;
         try
         {
-            await _mountService.MoveRelativeAsync("z", -(int)MountMoveRate * 15000);
+            await _mountService.MoveRelativeAsync("z", -(int)MountMoveRate * 21600);
         }
         catch (Exception ex)
         {
@@ -928,6 +1009,253 @@ public partial class MainWindowViewModel : ObservableObject
         catch (Exception ex)
         {
             Debug.WriteLine($"[ViewModel] Mount coarse move right failed: {ex.Message}");
+        }
+    }
+
+    // ── Plate Solving & Autonomous Ops ───────────────────────────
+    
+    [ObservableProperty] private int _selectedAutoModeIndex = 0;
+    
+    public bool IsAutoModeSolve => SelectedAutoModeIndex == 0;
+    public bool IsAutoModeCenter => SelectedAutoModeIndex == 1;
+    public bool IsAutoModeCalibrate => SelectedAutoModeIndex == 2;
+    public bool IsAutoModeGuide => SelectedAutoModeIndex == 3;
+
+    partial void OnSelectedAutoModeIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsAutoModeSolve));
+        OnPropertyChanged(nameof(IsAutoModeCenter));
+        OnPropertyChanged(nameof(IsAutoModeCalibrate));
+        OnPropertyChanged(nameof(IsAutoModeGuide));
+    }
+    
+    [ObservableProperty] private string _focalLengthMmText = "200";
+    [ObservableProperty] private string _pixelSizeUmText = "3.76";
+    [ObservableProperty] private double _plateScaleArcsecPerPx;
+
+    [ObservableProperty] private string _solveCurrentResultText = "Not solved yet.";
+    [ObservableProperty] private bool _isSolving;
+    
+    [ObservableProperty] private double _autoCenterTolerance = 15;
+    [ObservableProperty] private bool _isAutoCentering;
+    [ObservableProperty] private string _autoCenterStatus = "";
+    
+    [ObservableProperty] private int _autoCalibrateAltSteps = 4;
+    [ObservableProperty] private int _autoCalibrateAzSteps = 5;
+    [ObservableProperty] private bool _isAutoCalibrating;
+    [ObservableProperty] private string _autoCalibrateStatus = "";
+    
+    public string AutoCalibrateGridPreview => $"{AutoCalibrateAltSteps} × {AutoCalibrateAzSteps} = {AutoCalibrateAltSteps * AutoCalibrateAzSteps} positions";
+    public string AutoCalibrateTimeEstimate => $"~{AutoCalibrateAltSteps * AutoCalibrateAzSteps * 20 / 60} min";
+
+    partial void OnAutoCalibrateAltStepsChanged(int value)
+    {
+        OnPropertyChanged(nameof(AutoCalibrateGridPreview));
+        OnPropertyChanged(nameof(AutoCalibrateTimeEstimate));
+    }
+    
+    partial void OnAutoCalibrateAzStepsChanged(int value)
+    {
+        OnPropertyChanged(nameof(AutoCalibrateGridPreview));
+        OnPropertyChanged(nameof(AutoCalibrateTimeEstimate));
+    }
+
+    [ObservableProperty] private int _guideInterval = 60;
+    [ObservableProperty] private int _guideMaxCorrections = 0;
+    [ObservableProperty] private bool _isGuiding;
+    [ObservableProperty] private string _guideStatus = "Inactive";
+    
+    public bool CanPerformMountOp => !IsAutoCentering && !IsAutoCalibrating && !IsGuiding && !IsSolving;
+
+    partial void OnIsAutoCenteringChanged(bool value) => OnPropertyChanged(nameof(CanPerformMountOp));
+    partial void OnIsAutoCalibratingChanged(bool value) => OnPropertyChanged(nameof(CanPerformMountOp));
+    partial void OnIsGuidingChanged(bool value) => OnPropertyChanged(nameof(CanPerformMountOp));
+    partial void OnIsSolvingChanged(bool value) => OnPropertyChanged(nameof(CanPerformMountOp));
+
+    [RelayCommand]
+    private async Task ApplySolverConfig()
+    {
+        double? fl = double.TryParse(FocalLengthMmText.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var f) ? f : null;
+        double? px = double.TryParse(PixelSizeUmText.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var p) ? p : null;
+
+        if (fl is > 0 && px is > 0)
+        {
+            PlateScaleArcsecPerPx = 206.265 * px.Value / fl.Value;
+        }
+
+        if (_mountService is null) return;
+        try
+        {
+            var res = await _mountService.SolverConfigureAsync(fl, px);
+            if (res.Success)
+            {
+                FocalLengthMmText = res.FocalLengthMm.ToString(CultureInfo.InvariantCulture);
+                PixelSizeUmText = res.PixelSizeUm.ToString(CultureInfo.InvariantCulture);
+                PlateScaleArcsecPerPx = res.PlateScaleArcsecPerPx;
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Solver config failed: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task SolveCurrent()
+    {
+        if (_mountService is null) return;
+        try
+        {
+            IsSolving = true;
+            SolveCurrentResultText = "Solving... this may take a while";
+            var res = await _mountService.SolveCurrentAsync();
+            if (res is not null)
+            {
+                
+                SolveCurrentResultText = $"RA: {res.RaCenterHours:F3}h, Dec: {res.DecCenterDeg:F3}°\n" +
+                                         $"Scale: {res.PixelScaleArcsecPerPx:F2}″/px, Rot: {res.RotationDeg:F1}°\n" +
+                                         $"FOV: {res.FieldWidthDeg:F2}° × {res.FieldHeightDeg:F2}° ({res.SolveTimeMs}ms)";
+            }
+            else
+            {
+                SolveCurrentResultText = "No solution found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            SolveCurrentResultText = "Solve failed.";
+            ShowError($"Plate solve failed: {ex.Message}");
+        }
+        finally
+        {
+            IsSolving = false;
+        }
+    }
+
+    private CancellationTokenSource? _autoCenterCts;
+    
+    [RelayCommand]
+    private async Task AutoCenter()
+    {
+        if (_mountService is null) return;
+        if (!TryParseCoordinate(CurrentRa, out double ra) || !TryParseCoordinate(CurrentDec, out double dec))
+        {
+            ShowError("Invalid Target RA or Dec format");
+            return;
+        }
+
+        try
+        {
+            IsAutoCentering = true;
+            AutoCenterStatus = "Centering...";
+            _autoCenterCts = new CancellationTokenSource();
+            
+            var res = await _mountService.AutoCenterAsync(ra, dec, AutoCenterTolerance, _autoCenterCts.Token);
+            if (res.Success)
+                AutoCenterStatus = $"Centered in {res.Iterations} iters. Err: {res.FinalErrorPx:F1}px";
+            else
+                AutoCenterStatus = $"Failed: {res.Message}";
+        }
+        catch (OperationCanceledException)
+        {
+            AutoCenterStatus = "Cancelled.";
+        }
+        catch (Exception ex)
+        {
+            AutoCenterStatus = "Error.";
+            ShowError($"Auto-center failed: {ex.Message}");
+        }
+        finally
+        {
+            IsAutoCentering = false;
+            _autoCenterCts?.Dispose();
+            _autoCenterCts = null;
+        }
+    }
+
+    [RelayCommand]
+    private async Task CancelAutoCenter()
+    {
+        _autoCenterCts?.Cancel();
+        if (_mountService is not null)
+        {
+            try { await _mountService.CancelOperationAsync(); } catch { }
+        }
+    }
+
+    [RelayCommand]
+    private async Task AutoCalibrate()
+    {
+        if (_mountService is null) return;
+        
+        try
+        {
+            IsAutoCalibrating = true;
+            AutoCalibrateStatus = "Calibrating (takes minutes)...";
+            
+            var res = await _mountService.AutoCalibrateAsync(AutoCalibrateAltSteps, AutoCalibrateAzSteps);
+            AutoCalibrateStatus = $"{res.Message} (0/{res.TotalPositions})";
+        }
+        catch (Exception ex)
+        {
+            IsAutoCalibrating = false;
+            AutoCalibrateStatus = "Error starting.";
+            ShowError($"Auto-calibrate failed: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task CancelAutoCalibrate()
+    {
+        if (_mountService is not null)
+        {
+            try { await _mountService.CancelOperationAsync(); } catch { }
+        }
+    }
+
+    [RelayCommand]
+    private async Task ToggleGuiding()
+    {
+        if (_mountService is null) return;
+
+        if (IsGuiding)
+        {
+            // Stop guiding
+            try
+            {
+                GuideStatus = "Stopping...";
+                await _mountService.GuideStopAsync();
+                // We wait for OnGuideCompleteReceived to reset IsGuiding
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Stop guiding failed: {ex.Message}");
+                GuideStatus = "Error stopping.";
+                IsGuiding = false;
+            }
+        }
+        else
+        {
+            if (!TryParseCoordinate(CurrentRa, out double ra) || !TryParseCoordinate(CurrentDec, out double dec))
+            {
+                ShowError("Invalid Target RA or Dec format");
+                return;
+            }
+
+            // Start guiding
+            try
+            {
+                IsGuiding = true;
+                GuideStatus = "Starting guiding...";
+                var res = await _mountService.GuideStartAsync(ra, dec, GuideInterval, GuideMaxCorrections);
+                GuideStatus = res.Message ?? "Guiding started.";
+            }
+            catch (Exception ex)
+            {
+                IsGuiding = false;
+                GuideStatus = "Error starting.";
+                ShowError($"Guiding failed: {ex.Message}");
+            }
         }
     }
 
@@ -994,22 +1322,6 @@ public partial class MainWindowViewModel : ObservableObject
         {
             Debug.WriteLine($"[ViewModel] Add calibration point failed: {ex.Message}");
             ShowError($"Add calibration point failed: {ex.Message}");
-        }
-    }
-
-    [RelayCommand]
-    private async Task FinalizeCalibration()
-    {
-        if (_mountService is null) return;
-        try
-        {
-            var status = await _mountService.AlignmentStatusAsync();
-            UpdateAlignmentStatus(status);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[ViewModel] Finalize calibration failed: {ex.Message}");
-            ShowError($"Finalize calibration failed: {ex.Message}");
         }
     }
 
@@ -1087,6 +1399,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             _mountService.MountStatusReceived -= OnMountStatus;
             _mountService.MountPositionReceived -= OnMountPosition;
+            _mountService.CalibrationUpdated -= OnCalibrationUpdated;
             _mountService.ReferenceLost -= OnReferenceLost;
         }
 

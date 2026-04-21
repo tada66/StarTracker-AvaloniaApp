@@ -16,7 +16,14 @@ public class NetworkMountService : IMountService
 
     public event Action<MountStatusEventPayload>? MountStatusReceived;
     public event Action<MountPositionPayload>? MountPositionReceived;
+    public event Action<CalibrationUpdateEventPayload>? CalibrationUpdated;
+    public event Action<AutoCalibrateCompleteEventPayload>? AutoCalibrateCompleted;
+    public event Action<AutoCalibrateCancelledEventPayload>? AutoCalibrateCancelled;
+    public event Action<AutoCalibrateErrorEventPayload>? AutoCalibrateError;
     public event Action? ReferenceLost;
+
+    public event Action<GuideProgressEventPayload>? GuideProgressReceived;
+    public event Action<GuideCompleteEventPayload>? GuideCompleteReceived;
 
     public NetworkMountService(DeviceConnection connection)
     {
@@ -43,6 +50,60 @@ public class NetworkMountService : IMountService
                     var pos = JsonSerializer.Deserialize<MountPositionPayload>(posEl.GetRawText());
                     if (pos is not null)
                         MountPositionReceived?.Invoke(pos);
+                }
+                break;
+
+            case "mount.calibration.update":
+                if (msg.Payload is JsonElement calUpEl)
+                {
+                    var update = JsonSerializer.Deserialize<CalibrationUpdateEventPayload>(calUpEl.GetRawText());
+                    if (update is not null)
+                        CalibrationUpdated?.Invoke(update);
+                }
+                break;
+
+            case "mount.auto_calibrate.complete":
+                if (msg.Payload is JsonElement calCompEl)
+                {
+                    var complete = JsonSerializer.Deserialize<AutoCalibrateCompleteEventPayload>(calCompEl.GetRawText());
+                    if (complete is not null)
+                        AutoCalibrateCompleted?.Invoke(complete);
+                }
+                break;
+
+            case "mount.auto_calibrate.cancelled":
+                if (msg.Payload is JsonElement calCancEl)
+                {
+                    var cancelled = JsonSerializer.Deserialize<AutoCalibrateCancelledEventPayload>(calCancEl.GetRawText());
+                    if (cancelled is not null)
+                        AutoCalibrateCancelled?.Invoke(cancelled);
+                }
+                break;
+
+            case "mount.auto_calibrate.error":
+                if (msg.Payload is JsonElement calErrEl)
+                {
+                    var error = JsonSerializer.Deserialize<AutoCalibrateErrorEventPayload>(calErrEl.GetRawText());
+                    if (error is not null)
+                        AutoCalibrateError?.Invoke(error);
+                }
+                break;
+
+            case "mount.guide.progress":
+                if (msg.Payload is JsonElement guideProgEl)
+                {
+                    var prog = JsonSerializer.Deserialize<GuideProgressEventPayload>(guideProgEl.GetRawText());
+                    if (prog is not null)
+                        GuideProgressReceived?.Invoke(prog);
+                }
+                break;
+
+            case "mount.guide.complete":
+                if (msg.Payload is JsonElement guideCompEl)
+                {
+                    var comp = JsonSerializer.Deserialize<GuideCompleteEventPayload>(guideCompEl.GetRawText());
+                    if (comp is not null)
+                        GuideCompleteReceived?.Invoke(comp);
                 }
                 break;
 
@@ -112,5 +173,50 @@ public class NetworkMountService : IMountService
     {
         return await _connection.SendRequestAsync<AlignmentStatusPayload>(
             "mount", "mount.alignment.status", ct: ct);
+    }
+
+    public async Task<AutoCenterResponsePayload> AutoCenterAsync(double ra, double dec, double tolerance = 15, CancellationToken ct = default)
+    {
+        return await _connection.SendRequestAsync<AutoCenterResponsePayload>(
+            "mount", "mount.auto_center", new { ra, dec, tolerance }, ct: ct);
+    }
+
+    public async Task<AutoCalibrateResponsePayload> AutoCalibrateAsync(int altSteps = 4, int azSteps = 5, CancellationToken ct = default)
+    {
+        return await _connection.SendRequestAsync<AutoCalibrateResponsePayload>(
+            "mount", "mount.auto_calibrate", new { altSteps, azSteps }, ct: ct);
+    }
+
+    public async Task<GuideStartResponsePayload> GuideStartAsync(double ra, double dec, int interval = 60, int maxCorrections = 0, CancellationToken ct = default)
+    {
+        return await _connection.SendRequestAsync<GuideStartResponsePayload>(
+            "mount", "mount.guide.start", new { ra, dec, interval, maxCorrections }, ct: ct);
+    }
+
+    public async Task GuideStopAsync(CancellationToken ct = default)
+    {
+        await _connection.SendCommandAsync("mount", "mount.guide.stop", ct: ct);
+    }
+
+    public async Task<SolveCurrentResponsePayload?> SolveCurrentAsync(CancellationToken ct = default)
+    {
+        var response = await _connection.SendRequestAsync(
+            "mount", "mount.solve_current", timeout: TimeSpan.FromMinutes(10), ct: ct);
+        
+        if (response.Payload is null || response.Payload.Value.ValueKind == JsonValueKind.Null)
+            return null;
+
+        return JsonSerializer.Deserialize<SolveCurrentResponsePayload>(response.Payload.Value.GetRawText());
+    }
+
+    public async Task<SolverConfigureResponsePayload> SolverConfigureAsync(double? focalLengthMm, double? pixelSizeUm, CancellationToken ct = default)
+    {
+        return await _connection.SendRequestAsync<SolverConfigureResponsePayload>(
+            "mount", "mount.solver.configure", new { focalLengthMm, pixelSizeUm }, ct: ct);
+    }
+
+    public async Task CancelOperationAsync(CancellationToken ct = default)
+    {
+        await _connection.SendCommandAsync("mount", "mount.cancel", ct: ct);
     }
 }

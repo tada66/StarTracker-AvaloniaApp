@@ -83,7 +83,7 @@
             <Border Grid.Row="1" BorderBrush="{DynamicResource ForegroundBrush}" BorderThickness="0,1,1,0"
                     Background="{DynamicResource CameraViewBackground}" Padding="10">
                 <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
-                <Grid ColumnDefinitions="Auto, Auto, Auto, Auto, Auto" HorizontalAlignment="Center">
+                <Grid ColumnDefinitions="Auto, Auto, Auto, Auto, Auto, Auto" HorizontalAlignment="Center">
                     
                     <!-- Section 1: Motor & Movement Controls + Mount Status -->
                     <StackPanel Grid.Column="0" Margin="0,0,20,0" VerticalAlignment="Center">
@@ -185,12 +185,98 @@
                         </StackPanel>
                         
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
-                            <Button Classes="MountControlButton" Content="Finalize" Padding="8,4"
-                                    Command="{Binding FinalizeCalibrationCommand}"/>
                             <Button Classes="MountControlButton" Content="Discard" Padding="8,4"
                                     Command="{Binding DiscardCalibrationCommand}"/>
                         </StackPanel>
                     </StackPanel>
+                    
+                    <!-- Section 5: Plate Solving & Autonomous -->
+                    <Border Grid.Column="5" BorderBrush="{DynamicResource ForegroundBrush}" BorderThickness="1,0,0,0" Padding="10,0,0,0" Margin="10,0,0,0" MinWidth="240">
+                        <StackPanel Width="220" VerticalAlignment="Top" MinHeight="160">
+                            <ComboBox BorderBrush="{DynamicResource ForegroundBrush}" SelectedIndex="{Binding SelectedAutoModeIndex}" HorizontalAlignment="Stretch" Padding="6,2" FontSize="11" MinHeight="24" Margin="0,0,0,8">
+                                <ComboBoxItem>Solver Config &amp; Check</ComboBoxItem>
+                                <ComboBoxItem>Auto-Center Target</ComboBoxItem>
+                                <ComboBoxItem>Auto-Calibrate Mount</ComboBoxItem>
+                                <ComboBoxItem>Guided Tracking</ComboBoxItem>
+                            </ComboBox>
+                            
+                            <!-- Mode 0: Center & Solve -->
+                            <StackPanel IsVisible="{Binding IsAutoModeSolve, FallbackValue=True}" Spacing="6" IsEnabled="{Binding CanPerformMountOp}">
+                                <!-- Solver config -->
+                                <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto">
+                                    <TextBlock Grid.Column="0" Text="FL:" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <TextBox Grid.Column="1" Text="{Binding FocalLengthMmText, Mode=TwoWay}" FontSize="12" Padding="4,2" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}"/>
+                                    <TextBlock Grid.Column="2" Text="Px:" FontSize="11" VerticalAlignment="Center" Margin="8,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <TextBox Grid.Column="3" Text="{Binding PixelSizeUmText, Mode=TwoWay}" FontSize="12" Padding="4,2" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}"/>
+                                </Grid>
+                                
+                                <!-- Buttons -->
+                                <Grid ColumnDefinitions="*, *" Margin="0,2,0,0">
+                                    <Button Grid.Column="0" Classes="MountControlButton" Content="Apply Config" FontSize="11" Command="{Binding ApplySolverConfigCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,2,0" Padding="4"/>
+                                    <Button Grid.Column="1" Classes="MountControlButton" Content="Solve Current" FontSize="11" Command="{Binding SolveCurrentCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2,0,0,0" Padding="4"/>
+                                </Grid>
+                                
+                                <!-- Status texts -->
+                                <TextBlock Text="{Binding PlateScaleArcsecPerPx, StringFormat='Scale: {0:F2} ″/px'}" FontSize="11" Foreground="{DynamicResource ForegroundBrush}"/>
+                                <TextBlock Text="{Binding SolveCurrentResultText}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundBrush}" MinHeight="32"/>
+                            </StackPanel>
+
+                            <!-- Mode 1: Auto-Center -->
+                            <StackPanel IsVisible="{Binding IsAutoModeCenter, FallbackValue=False}" Spacing="6">
+                                <TextBlock Text="Centers on tracked target." FontSize="11" Foreground="{DynamicResource ForegroundBrush}"/>
+                                
+                                <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto">
+                                    <TextBlock Grid.Column="0" Text="Tolerance (px):" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown BorderBrush="{DynamicResource ForegroundBrush}" Grid.Column="1" Value="{Binding AutoCenterTolerance}" Minimum="5" Maximum="50" Increment="1" FontSize="12" Padding="4,2" HorizontalAlignment="Stretch" MinHeight="24"/>
+                                </Grid>
+                                
+                                <TextBlock Text="{Binding AutoCenterStatus}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundBrush}" MinHeight="32"/>
+                                
+                                <Button Classes="MountControlButton" Content="Auto-Center" Command="{Binding AutoCenterCommand}" IsVisible="{Binding !IsAutoCentering}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="6"/>
+                                <Button Classes="MountControlButton" Content="Cancel Centering" Background="#880000" Command="{Binding CancelAutoCenterCommand}" IsVisible="{Binding IsAutoCentering}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="6"/>
+                            </StackPanel>
+
+                            <!-- Mode 2: Auto-Calibrate -->
+                            <StackPanel IsVisible="{Binding IsAutoModeCalibrate, FallbackValue=False}" Spacing="4">
+                                <Grid ColumnDefinitions="Auto, *, Auto, *" RowDefinitions="Auto, Auto">
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Alt:" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown Grid.Column="1" Grid.Row="0" Value="{Binding AutoCalibrateAltSteps}" Minimum="2" Maximum="10" Increment="1" FontSize="12" Padding="4,8" HorizontalAlignment="Stretch" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}"/>
+                                    
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Az:" FontSize="11" VerticalAlignment="Center" Margin="8,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown Grid.Column="1" Grid.Row="1" Value="{Binding AutoCalibrateAzSteps}" Minimum="2" Maximum="12" Increment="1" FontSize="12" Padding="4,8" HorizontalAlignment="Stretch" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}"/>
+                                </Grid>
+                                
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="{Binding AutoCalibrateGridPreview}" FontSize="11" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <TextBlock Text="{Binding AutoCalibrateTimeEstimate}" FontSize="11" Foreground="{DynamicResource ForegroundBrush}"/>
+                                </StackPanel>
+                                
+                                <TextBlock Text="{Binding AutoCalibrateStatus}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundBrush}" MinHeight="16"/>
+                                
+                                <Button Classes="MountControlButton" Content="Start Calibration" Command="{Binding AutoCalibrateCommand}" IsVisible="{Binding !IsAutoCalibrating}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="4"/>
+                                <Button Classes="MountControlButton" Content="Stop Calibration" Background="#880000" Command="{Binding CancelAutoCalibrateCommand}" IsVisible="{Binding IsAutoCalibrating}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="4"/>
+                            </StackPanel>
+
+                            <!-- Mode 3: Guiding -->
+                            <StackPanel IsVisible="{Binding IsAutoModeGuide, FallbackValue=False}" Spacing="6">
+                                <TextBlock Text="Guides to tracked target." FontSize="11" Foreground="{DynamicResource ForegroundBrush}"/>
+                                
+                                <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto" RowSpacing="6">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Interval (s):" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown Grid.Row="0" Grid.Column="1" Value="{Binding GuideInterval}" Minimum="10" Maximum="300" Increment="5" FontSize="12" Padding="4,2" HorizontalAlignment="Stretch" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}"/>
+                                    
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Max Corrs:" ToolTip.Tip="0 = unlimited" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding GuideMaxCorrections}" Minimum="0" Maximum="999" Increment="1" FontSize="12" Padding="4,2" HorizontalAlignment="Stretch" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}" ToolTip.Tip="0 = unlimited"/>
+                                </Grid>
+                                
+                                <TextBlock Text="{Binding GuideStatus}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundBrush}" MinHeight="32"/>
+                                
+                                <Button Classes="MountControlButton" Content="Start Guiding" Command="{Binding ToggleGuidingCommand}" IsVisible="{Binding !IsGuiding}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="6"/>
+                                <Button Classes="MountControlButton" Content="Stop Guiding" Background="#880000" Command="{Binding ToggleGuidingCommand}" IsVisible="{Binding IsGuiding}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="6"/>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </Border>
                     
                 </Grid>
                 </Viewbox>
