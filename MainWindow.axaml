@@ -192,13 +192,14 @@
                     
                     <!-- Section 5: Plate Solving & Autonomous -->
                     <Border Grid.Column="5" BorderBrush="{DynamicResource ForegroundBrush}" BorderThickness="1,0,0,0" Padding="10,0,0,0" Margin="10,0,0,0" MinWidth="240">
-                        <StackPanel Width="220" VerticalAlignment="Top" MinHeight="160">
+                        <StackPanel Width="220" VerticalAlignment="Top" Height="168">
                             <ComboBox BorderBrush="{DynamicResource ForegroundBrush}" SelectedIndex="{Binding SelectedAutoModeIndex}" HorizontalAlignment="Stretch" Padding="6,2" FontSize="11" MinHeight="24" Margin="0,0,0,8">
                                 <ComboBoxItem>Solver Config &amp; Check</ComboBoxItem>
                                 <ComboBoxItem>Auto-Center Target</ComboBoxItem>
                                 <ComboBoxItem>Auto-Calibrate Mount</ComboBoxItem>
                                 <ComboBoxItem>Guided Tracking</ComboBoxItem>
                             </ComboBox>
+                            <Grid Height="136" VerticalAlignment="Top">
                             
                             <!-- Mode 0: Center & Solve -->
                             <StackPanel IsVisible="{Binding IsAutoModeSolve, FallbackValue=True}" Spacing="6" IsEnabled="{Binding CanPerformMountOp}">
@@ -227,7 +228,7 @@
                                 
                                 <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto">
                                     <TextBlock Grid.Column="0" Text="Tolerance (px):" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <NumericUpDown BorderBrush="{DynamicResource ForegroundBrush}" Grid.Column="1" Value="{Binding AutoCenterTolerance}" Minimum="5" Maximum="50" Increment="1" FontSize="12" Padding="4,2" HorizontalAlignment="Stretch" MinHeight="24"/>
+                                    <NumericUpDown BorderBrush="{DynamicResource ForegroundBrush}" Grid.Column="1" Value="{Binding AutoCenterTolerance}" Minimum="5" Maximum="50" Increment="1" FontSize="12" Padding="4,2" HorizontalAlignment="Stretch" MinHeight="24" VerticalContentAlignment="Center"/>
                                 </Grid>
                                 
                                 <TextBlock Text="{Binding AutoCenterStatus}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundBrush}" MinHeight="32"/>
@@ -240,10 +241,10 @@
                             <StackPanel IsVisible="{Binding IsAutoModeCalibrate, FallbackValue=False}" Spacing="4">
                                 <Grid ColumnDefinitions="Auto, *, Auto, *" RowDefinitions="Auto, Auto">
                                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Alt:" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <NumericUpDown Grid.Column="1" Grid.Row="0" Value="{Binding AutoCalibrateAltSteps}" Minimum="2" Maximum="10" Increment="1" FontSize="12" Padding="4,8" HorizontalAlignment="Stretch" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown Grid.Column="1" Grid.Row="0" Value="{Binding AutoCalibrateAltSteps}" Minimum="2" Maximum="10" Increment="1" FontSize="11" Padding="4,2" Height="22" BorderBrush="{DynamicResource ForegroundBrush}" VerticalContentAlignment="Center"/>
                                     
                                     <TextBlock Grid.Column="0" Grid.Row="1" Text="Az:" FontSize="11" VerticalAlignment="Center" Margin="8,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <NumericUpDown Grid.Column="1" Grid.Row="1" Value="{Binding AutoCalibrateAzSteps}" Minimum="2" Maximum="12" Increment="1" FontSize="12" Padding="4,8" HorizontalAlignment="Stretch" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown Grid.Column="1" Grid.Row="1" Value="{Binding AutoCalibrateAzSteps}" Minimum="2" Maximum="12" Increment="1" FontSize="11" Padding="4,2" Height="22" BorderBrush="{DynamicResource ForegroundBrush}" VerticalContentAlignment="Center"/>
                                 </Grid>
                                 
                                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -258,22 +259,21 @@
                             </StackPanel>
 
                             <!-- Mode 3: Guiding -->
-                            <StackPanel IsVisible="{Binding IsAutoModeGuide, FallbackValue=False}" Spacing="6">
-                                <TextBlock Text="Guides to tracked target." FontSize="11" Foreground="{DynamicResource ForegroundBrush}"/>
-                                
-                                <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto" RowSpacing="6">
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Interval (s):" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <NumericUpDown Grid.Row="0" Grid.Column="1" Value="{Binding GuideInterval}" Minimum="10" Maximum="300" Increment="5" FontSize="12" Padding="4,2" HorizontalAlignment="Stretch" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}"/>
+                            <StackPanel IsVisible="{Binding IsAutoModeGuide, FallbackValue=False}" Spacing="4">
+                                <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto" RowSpacing="2">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Int (s):" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown Grid.Row="0" Grid.Column="1" Value="{Binding GuideInterval}" Minimum="10" Maximum="300" Increment="5" FontSize="11" Padding="4,1" Height="22" BorderBrush="{DynamicResource ForegroundBrush}" VerticalContentAlignment="Center"/>
                                     
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Max Corrs:" ToolTip.Tip="0 = unlimited" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
-                                    <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding GuideMaxCorrections}" Minimum="0" Maximum="999" Increment="1" FontSize="12" Padding="4,2" HorizontalAlignment="Stretch" MinHeight="24" BorderBrush="{DynamicResource ForegroundBrush}" ToolTip.Tip="0 = unlimited"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Max Corr:" ToolTip.Tip="0 = unlimited" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                                    <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding GuideMaxCorrections}" Minimum="0" Maximum="999" Increment="1" FontSize="11" Padding="4,1" Height="22" BorderBrush="{DynamicResource ForegroundBrush}" ToolTip.Tip="0 = unlimited" VerticalContentAlignment="Center"/>
                                 </Grid>
                                 
-                                <TextBlock Text="{Binding GuideStatus}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundBrush}" MinHeight="32"/>
+                                <TextBlock Text="{Binding GuideStatus}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource ForegroundBrush}" MinHeight="16"/>
                                 
-                                <Button Classes="MountControlButton" Content="Start Guiding" Command="{Binding ToggleGuidingCommand}" IsVisible="{Binding !IsGuiding}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="6"/>
-                                <Button Classes="MountControlButton" Content="Stop Guiding" Background="#880000" Command="{Binding ToggleGuidingCommand}" IsVisible="{Binding IsGuiding}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="6"/>
+                                <Button Classes="MountControlButton" Content="Start Guiding" Command="{Binding ToggleGuidingCommand}" IsVisible="{Binding !IsGuiding}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="4"/>
+                                <Button Classes="MountControlButton" Content="Stop Guiding" Background="#880000" Command="{Binding ToggleGuidingCommand}" IsVisible="{Binding IsGuiding}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" FontSize="11" Padding="4"/>
                             </StackPanel>
+                            </Grid>
 
                         </StackPanel>
                     </Border>
