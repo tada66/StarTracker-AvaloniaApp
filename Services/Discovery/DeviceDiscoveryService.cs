@@ -14,7 +14,7 @@ using Avalonia.Threading;
 namespace Star_Tracker.Services.Discovery;
 
 /// <summary>
-/// Discovers devices advertising _bpcontrol._tcp.local via mDNS.
+/// Discovers devices advertising _startracker._tcp.local via mDNS.
 /// Sends PTR queries to 224.0.0.251:5353 and listens for responses
 /// on the mDNS multicast group.
 /// </summary>
@@ -91,8 +91,8 @@ public class DeviceDiscoveryService : IDisposable
                     try { udp.JoinMulticastGroup(mcastAddr); } catch { }
                 }
 
-                // Build mDNS PTR query for _bpcontrol._tcp.local
-                var query = BuildMdnsQuery("_bpcontrol._tcp.local");
+                // Build mDNS PTR query for _startracker._tcp.local
+                var query = BuildMdnsQuery("_startracker._tcp.local");
                 var mcastEndpoint = new IPEndPoint(mcastAddr, 5353);
 
                 // Collect all local IPv4 addresses to send query on each interface
@@ -221,7 +221,7 @@ public class DeviceDiscoveryService : IDisposable
 
     /// <summary>
     /// Parse an mDNS response packet. Looks for PTR, SRV, TXT, and A records
-    /// related to _bpcontrol._tcp.local.
+    /// related to _startracker._tcp.local.
     /// </summary>
     private void ParseMdnsResponse(byte[] data, string sourceIp)
     {
@@ -264,16 +264,16 @@ public class DeviceDiscoveryService : IDisposable
 
                 if (offset + rdLength > data.Length) break;
 
-                bool nameMatchesService = recordName.Contains("_bpcontrol", StringComparison.OrdinalIgnoreCase);
+                bool nameMatchesService = recordName.Contains("_startracker", StringComparison.OrdinalIgnoreCase);
 
                 switch (rtype)
                 {
                     case 12: // PTR
                         string ptrTarget = ReadDnsName(data, offset, out _);
-                        if (ptrTarget.Contains("_bpcontrol", StringComparison.OrdinalIgnoreCase))
+                        if (ptrTarget.Contains("_startracker", StringComparison.OrdinalIgnoreCase))
                         {
                             foundService = true;
-                            var dotIdx = ptrTarget.IndexOf("._bpcontrol", StringComparison.OrdinalIgnoreCase);
+                            var dotIdx = ptrTarget.IndexOf("._startracker", StringComparison.OrdinalIgnoreCase);
                             if (dotIdx > 0)
                                 deviceName = ptrTarget[..dotIdx];
                         }
