@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -288,6 +289,7 @@ public partial class MainWindowViewModel : ObservableObject
     public string MountTempDisplay => $"{MountTemperature:F1}°C";
     public string FanSpeedDisplay => $"{FanSpeed}%";
     public string MotorStateDisplay => !MotorsEnabled ? "Off" : MotorsPaused ? "Paused" : "Running";
+    public string DemoModeButtonText => IsDemoMode ? "STOP DEMO" : "DEMO";
 
     // Dynamic button text
     public string StopEnableButtonText => MotorsEnabled ? "STOP MOTORS" : "ENABLE MOTORS";
@@ -302,6 +304,8 @@ public partial class MainWindowViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(MotorStateDisplay));
         OnPropertyChanged(nameof(StopEnableButtonText));
+        if (!value && IsDemoMode)
+            _ = StopDemoModeInternalAsync();
     }
     partial void OnMotorsPausedChanged(bool value)
     {
@@ -1078,13 +1082,271 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private int _guideMaxCorrections = 0;
     [ObservableProperty] private bool _isGuiding;
     [ObservableProperty] private string _guideStatus = "Inactive";
+    [ObservableProperty] private bool _isDemoMode;
     
-    public bool CanPerformMountOp => !IsAutoCentering && !IsAutoCalibrating && !IsGuiding && !IsSolving;
+    public bool CanPerformMountOp => !IsAutoCentering && !IsAutoCalibrating && !IsGuiding && !IsSolving && !IsDemoMode;
 
     partial void OnIsAutoCenteringChanged(bool value) => OnPropertyChanged(nameof(CanPerformMountOp));
     partial void OnIsAutoCalibratingChanged(bool value) => OnPropertyChanged(nameof(CanPerformMountOp));
     partial void OnIsGuidingChanged(bool value) => OnPropertyChanged(nameof(CanPerformMountOp));
     partial void OnIsSolvingChanged(bool value) => OnPropertyChanged(nameof(CanPerformMountOp));
+    partial void OnIsDemoModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanPerformMountOp));
+        OnPropertyChanged(nameof(DemoModeButtonText));
+    }
+
+    private CancellationTokenSource? _demoModeCts;
+    private readonly Random _demoRandom = new();
+    private const int ArcsecPerDegree = 3600;
+    private const int XAxisMinArcsec = 0;
+    private const int XAxisMaxArcsec = 650000;
+    private const int TwistLimitArcsec = 270 * ArcsecPerDegree;
+    private const int DemoMinMoveDeg = 10;
+    private const int DemoMaxMoveDeg = 40;
+    private const int DemoArrivalToleranceArcsec = 600;
+
+    [RelayCommand]
+    private async Task ToggleDemoMode()
+    {
+        if (_mountService is null)
+            return;
+
+        if (IsDemoMode)
+        {
+            await StopDemoModeInternalAsync();
+            return;
+        }
+
+        if (!MotorsEnabled)
+        {
+            ShowError("Demo mode requires motors to be enabled.");
+            return;
+        }
+
+        if (!CanPerformMountOp)
+        {
+            ShowError("Cannot start demo mode while another mount operation is running.");
+            return;
+        }
+
+        var cts = new CancellationTokenSource();
+        _demoModeCts = cts;
+        IsDemoMode = true;
+
+        _ = Task.Run(() => RunDemoLoopAsync(cts.Token));
+        await Task.CompletedTask;
+    }
+
+    private async Task StopDemoModeInternalAsync()
+    {
+        var cts = _demoModeCts;
+        _demoModeCts = null;
+        IsDemoMode = false;
+
+        if (cts is null)
+            return;
+
+        try
+        {
+            cts.Cancel();
+        }
+        finally
+        {
+            cts.Dispose();
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task RunDemoLoopAsync(CancellationToken ct)
+    {
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                if (!MotorsEnabled)
+                    break;
+
+                bool moved = false;
+                for (int attempt = 0; attempt < 5 && !moved; attempt++)
+                    moved = await ExecuteDemoStepAsync(ct);
+
+                if (!moved)
+                    await Task.Delay(500, ct);
+
+                await Task.Delay(_demoRandom.Next(1200, 2600), ct);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when demo mode is stopped.
+        }
+        catch (Exception ex)
+        {
+            Dispatcher.UIThread.Post(() => ShowError($"Demo mode stopped: {ex.Message}"));
+        }
+        finally
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (IsDemoMode)
+                    _ = StopDemoModeInternalAsync();
+            });
+        }
+    }
+
+    private async Task<bool> ExecuteDemoStepAsync(CancellationToken ct)
+    {
+        if (_mountService is null)
+            return false;
+
+        var axes = SelectDemoAxesForStep();
+        var targets = new Dictionary<string, int>();
+
+        foreach (var axis in axes)
+        {
+            int requestedOffset = CreateDemoOffset(axis);
+            int startPosition = GetAxisPosition(axis);
+            int safeOffset = GetSafeOffset(axis, requestedOffset, startPosition);
+            if (Math.Abs(safeOffset) < DemoMinMoveDeg * ArcsecPerDegree)
+                continue;
+
+            await _mountService.MoveRelativeAsync(axis, safeOffset, ct);
+            targets[axis] = startPosition + safeOffset;
+        }
+
+        if (targets.Count == 0)
+            return false;
+
+        await WaitForAxesArrivalAsync(targets, ct);
+        return true;
+    }
+
+    private int GetSafeOffset(string axis, int requestedOffset, int? currentPosition = null)
+    {
+        int current = currentPosition ?? GetAxisPosition(axis);
+        return axis switch
+        {
+            // X (height) must stay within [0, 650000] arcsec.
+            "x" => ClampDelta(current, requestedOffset, XAxisMinArcsec, XAxisMaxArcsec),
+            // Y and Z can go below zero, but never beyond +/-270 deg.
+            "y" => ClampDelta(current, requestedOffset, -TwistLimitArcsec, TwistLimitArcsec),
+            "z" => ClampDelta(current, requestedOffset, -TwistLimitArcsec, TwistLimitArcsec),
+            _ => requestedOffset
+        };
+    }
+
+    private string SelectDemoAxis()
+    {
+        // Favor X/Z for visible showcase movement, with occasional Y motion.
+        int roll = _demoRandom.Next(0, 100);
+        if (roll < 45) return "x";
+        if (roll < 90) return "z";
+        return "y";
+    }
+
+    private List<string> SelectDemoAxesForStep()
+    {
+        var axes = new List<string>();
+        var first = SelectDemoAxis();
+        axes.Add(first);
+
+        // Often move two axes together for a more dynamic demo.
+        if (_demoRandom.Next(0, 100) < 65)
+        {
+            var second = SelectDemoAxis();
+            if (second == first)
+                second = first == "y" ? "z" : "y";
+            axes.Add(second);
+        }
+
+        return axes;
+    }
+
+    private int CreateDemoOffset(string axis)
+    {
+        int degrees = _demoRandom.Next(DemoMinMoveDeg, DemoMaxMoveDeg + 1);
+        int sign = _demoRandom.Next(0, 2) == 0 ? -1 : 1;
+        int requested = sign * degrees * ArcsecPerDegree;
+
+        // For X, if we're near bounds and random sign points out of range,
+        // try flipping direction so we avoid tiny jitter moves at the edges.
+        if (axis == "x")
+        {
+            int current = MountX;
+            int safe = GetSafeOffset("x", requested, current);
+            if (Math.Abs(safe) < DemoMinMoveDeg * ArcsecPerDegree)
+                requested = -requested;
+        }
+
+        return requested;
+    }
+
+    private int GetAxisPosition(string axis)
+    {
+        return axis switch
+        {
+            "x" => MountX,
+            "y" => MountY,
+            "z" => MountZ,
+            _ => 0
+        };
+    }
+
+    private async Task WaitForAxesArrivalAsync(Dictionary<string, int> targets, CancellationToken ct)
+    {
+        if (_mountService is null || targets.Count == 0)
+            return;
+
+        double maxDistanceDeg = 0;
+        foreach (var kvp in targets)
+        {
+            double d = Math.Abs(kvp.Value - GetAxisPosition(kvp.Key)) / (double)ArcsecPerDegree;
+            if (d > maxDistanceDeg) maxDistanceDeg = d;
+        }
+
+        double distanceDeg = maxDistanceDeg;
+        var timeout = TimeSpan.FromSeconds(Math.Clamp(10 + distanceDeg * 1.2, 10, 45));
+        var sw = Stopwatch.StartNew();
+        int settledChecks = 0;
+
+        while (sw.Elapsed < timeout && !ct.IsCancellationRequested)
+        {
+            try { await _mountService.GetPositionAsync(ct); } catch { }
+            await Task.Delay(300, ct);
+
+            bool allArrived = true;
+            foreach (var kvp in targets)
+            {
+                int current = GetAxisPosition(kvp.Key);
+                if (Math.Abs(current - kvp.Value) > DemoArrivalToleranceArcsec)
+                {
+                    allArrived = false;
+                    break;
+                }
+            }
+
+            if (allArrived)
+            {
+                settledChecks++;
+                if (settledChecks >= 2)
+                    return;
+            }
+            else
+                settledChecks = 0;
+        }
+    }
+
+    private static int ClampDelta(int currentValue, int requestedDelta, int minAllowed, int maxAllowed)
+    {
+        long target = (long)currentValue + requestedDelta;
+        if (target < minAllowed)
+            return minAllowed - currentValue;
+        if (target > maxAllowed)
+            return maxAllowed - currentValue;
+        return requestedDelta;
+    }
 
     [RelayCommand]
     private async Task ApplySolverConfig()
@@ -1401,6 +1663,11 @@ public partial class MainWindowViewModel : ObservableObject
         if (_isDisposed)
             return;
         _isDisposed = true;
+
+        _demoModeCts?.Cancel();
+        _demoModeCts?.Dispose();
+        _demoModeCts = null;
+        IsDemoMode = false;
 
         _errorDismissCts?.Cancel();
         _errorDismissCts?.Dispose();

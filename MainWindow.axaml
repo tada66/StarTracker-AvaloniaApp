@@ -111,6 +111,10 @@
                                 Width="160" HorizontalContentAlignment="Center"
                                 Command="{Binding PauseResumeMovementCommand}"
                                 IsVisible="{Binding MotorsEnabled}"/>
+                        <Button Classes="MountControlButton" Content="{Binding DemoModeButtonText}" Padding="8,6"
+                                Width="160" HorizontalContentAlignment="Center"
+                                Command="{Binding ToggleDemoModeCommand}"
+                                IsEnabled="{Binding MotorsEnabled}"/>
                     </StackPanel>
 
                     <!-- Section 1b: Mount Status Info -->
