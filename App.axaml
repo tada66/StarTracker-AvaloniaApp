@@ -15,6 +15,28 @@
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
+
+        <Style Selector="Slider.BrightnessSlider /template/ Thumb">
+            <Setter Property="Background" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ForegroundBrush}"/>
+        </Style>
+        <Style Selector="Slider.BrightnessSlider:pointerover /template/ Thumb">
+            <Setter Property="Background" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ForegroundBrush}"/>
+        </Style>
+        <Style Selector="Slider.BrightnessSlider:pressed /template/ Thumb">
+            <Setter Property="Background" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ForegroundBrush}"/>
+        </Style>
+        <Style Selector="Slider.BrightnessSlider">
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        </Style>
+        <Style Selector="Slider.BrightnessSlider:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        </Style>
+        <Style Selector="Slider.BrightnessSlider:pressed">
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        </Style>
     </Application.Styles>
     <Application.Resources>
 		<SolidColorBrush x:Key="BackgroundBrush" Color="#000000"/>

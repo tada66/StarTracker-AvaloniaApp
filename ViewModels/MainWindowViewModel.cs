@@ -49,6 +49,14 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private bool _isLiveViewActive;
     [ObservableProperty] private double _liveViewFps;
     [ObservableProperty] private bool _isMagnified;
+    [ObservableProperty] private double _liveViewBrightness = 1.0;
+
+    public string LiveViewBrightnessLabel => $"Brightness {LiveViewBrightness:0.00}x";
+
+    partial void OnLiveViewBrightnessChanged(double value)
+    {
+        OnPropertyChanged(nameof(LiveViewBrightnessLabel));
+    }
 
     // ── ISO ──────────────────────────────────────────────────────
 
@@ -615,6 +623,12 @@ public partial class MainWindowViewModel : ObservableObject
             LiveViewFrame = frame;
             old?.Dispose();
         });
+    }
+
+    [RelayCommand]
+    private void ResetLiveViewBrightness()
+    {
+        LiveViewBrightness = 1.0;
     }
 
     // ── Load settings ────────────────────────────────────────────

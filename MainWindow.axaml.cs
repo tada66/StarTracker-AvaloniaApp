@@ -1,8 +1,11 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media.Imaging;
 using Star_Tracker.Services;
 using Star_Tracker.Services.Connection;
 using Star_Tracker.Services.LiveView;
@@ -257,9 +260,80 @@ namespace Star_Tracker
             }
         }
 
-        private void OnLiveViewFrame(Avalonia.Media.Imaging.Bitmap frame)
+        private void OnLiveViewFrame(Bitmap frame)
         {
-            _viewModel?.UpdateLiveViewFrame(frame);
+            if (_viewModel is null)
+            {
+                frame.Dispose();
+                return;
+            }
+
+            var brightness = _viewModel.LiveViewBrightness;
+            if (brightness <= 1.001)
+            {
+                _viewModel.UpdateLiveViewFrame(frame);
+                return;
+            }
+
+            var adjusted = ApplyBrightness(frame, brightness);
+            _viewModel.UpdateLiveViewFrame(adjusted);
+        }
+
+        private static Bitmap ApplyBrightness(Bitmap source, double brightness)
+        {
+            var adjusted = new WriteableBitmap(source.PixelSize, source.Dpi, source.Format, source.AlphaFormat);
+            var width = source.PixelSize.Width;
+            var height = source.PixelSize.Height;
+            var bitsPerPixel = source.Format?.BitsPerPixel ?? 32;
+            var bytesPerPixel = Math.Max(1, bitsPerPixel / 8);
+            var stride = width * bytesPerPixel;
+            var pixelBytesInRow = stride;
+            var pixels = new byte[stride * height];
+
+            var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+            try
+            {
+                source.CopyPixels(new PixelRect(0, 0, width, height), handle.AddrOfPinnedObject(), pixels.Length, stride);
+            }
+            finally
+            {
+                handle.Free();
+            }
+
+            for (var y = 0; y < height; y++)
+            {
+                var rowOffset = y * stride;
+                for (var x = 0; x < pixelBytesInRow; x += bytesPerPixel)
+                {
+                    var offset = rowOffset + x;
+                    pixels[offset] = ScaleChannel(pixels[offset], brightness);
+                    if (bytesPerPixel > 1)
+                        pixels[offset + 1] = ScaleChannel(pixels[offset + 1], brightness);
+                    if (bytesPerPixel > 2)
+                        pixels[offset + 2] = ScaleChannel(pixels[offset + 2], brightness);
+                }
+            }
+
+            using (var dstLock = adjusted.Lock())
+            {
+                var copiedRowBytes = Math.Min(stride, dstLock.RowBytes);
+                for (var y = 0; y < height; y++)
+                {
+                    var srcOffset = y * stride;
+                    var dstRowPtr = IntPtr.Add(dstLock.Address, y * dstLock.RowBytes);
+                    Marshal.Copy(pixels, srcOffset, dstRowPtr, copiedRowBytes);
+                }
+            }
+
+            source.Dispose();
+            return adjusted;
+        }
+
+        private static byte ScaleChannel(byte channel, double brightness)
+        {
+            var value = (int)Math.Round(channel * brightness);
+            if (value > 255) return 255;
+            return (byte)value;
         }
 
         private void OnLiveViewFpsUpdated(double fps)
