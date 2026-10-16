@@ -237,7 +237,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     // ── Focus stepping ───────────────────────────────────────────
 
-    [ObservableProperty] private decimal _focusStepCount = 1;
+    [ObservableProperty] private decimal? _focusStepCount = 1;
 
     // ── Bulb mode ────────────────────────────────────────────────
 
@@ -801,7 +801,13 @@ public partial class MainWindowViewModel : ObservableObject
     {
         try
         {
-            await _cameraService.FocusAsync("closer", (int)FocusStepCount);
+            if (FocusStepCount is not > 0)
+            {
+                ShowError("Focus step count must be greater than zero.");
+                return;
+            }
+
+            await _cameraService.FocusAsync("closer", (int)FocusStepCount.Value);
         }
         catch (Exception ex)
         {
@@ -814,7 +820,13 @@ public partial class MainWindowViewModel : ObservableObject
     {
         try
         {
-            await _cameraService.FocusAsync("further", (int)FocusStepCount);
+            if (FocusStepCount is not > 0)
+            {
+                ShowError("Focus step count must be greater than zero.");
+                return;
+            }
+
+            await _cameraService.FocusAsync("further", (int)FocusStepCount.Value);
         }
         catch (Exception ex)
         {
@@ -1050,32 +1062,38 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private string _solveCurrentResultText = "Not solved yet.";
     [ObservableProperty] private bool _isSolving;
     
-    [ObservableProperty] private double _autoCenterTolerance = 15;
+    [ObservableProperty] private decimal? _autoCenterTolerance = 15;
     [ObservableProperty] private bool _isAutoCentering;
     [ObservableProperty] private string _autoCenterStatus = "";
     
-    [ObservableProperty] private int _autoCalibrateAltSteps = 4;
-    [ObservableProperty] private int _autoCalibrateAzSteps = 5;
+    [ObservableProperty] private decimal? _autoCalibrateAltSteps = 4;
+    [ObservableProperty] private decimal? _autoCalibrateAzSteps = 5;
     [ObservableProperty] private bool _isAutoCalibrating;
     [ObservableProperty] private string _autoCalibrateStatus = "";
     
-    public string AutoCalibrateGridPreview => $"{AutoCalibrateAltSteps} × {AutoCalibrateAzSteps} = {AutoCalibrateAltSteps * AutoCalibrateAzSteps} positions";
-    public string AutoCalibrateTimeEstimate => $"~{AutoCalibrateAltSteps * AutoCalibrateAzSteps * 20 / 60} min";
+    public string AutoCalibrateGridPreview =>
+        AutoCalibrateAltSteps is { } alt && AutoCalibrateAzSteps is { } az
+            ? $"{alt} × {az} = {alt * az} positions"
+            : "Enter Alt and Az steps";
+    public string AutoCalibrateTimeEstimate =>
+        AutoCalibrateAltSteps is { } alt && AutoCalibrateAzSteps is { } az
+            ? $"~{alt * az * 20 / 60} min"
+            : "";
 
-    partial void OnAutoCalibrateAltStepsChanged(int value)
+    partial void OnAutoCalibrateAltStepsChanged(decimal? value)
     {
         OnPropertyChanged(nameof(AutoCalibrateGridPreview));
         OnPropertyChanged(nameof(AutoCalibrateTimeEstimate));
     }
     
-    partial void OnAutoCalibrateAzStepsChanged(int value)
+    partial void OnAutoCalibrateAzStepsChanged(decimal? value)
     {
         OnPropertyChanged(nameof(AutoCalibrateGridPreview));
         OnPropertyChanged(nameof(AutoCalibrateTimeEstimate));
     }
 
-    [ObservableProperty] private int _guideInterval = 60;
-    [ObservableProperty] private int _guideMaxCorrections = 0;
+    [ObservableProperty] private decimal? _guideInterval = 60;
+    [ObservableProperty] private decimal? _guideMaxCorrections = 0;
     [ObservableProperty] private bool _isGuiding;
     [ObservableProperty] private string _guideStatus = "Inactive";
     
@@ -1152,6 +1170,11 @@ public partial class MainWindowViewModel : ObservableObject
     private async Task AutoCenter()
     {
         if (_mountService is null) return;
+        if (AutoCenterTolerance is not >= 5 and <= 50)
+        {
+            ShowError("Tolerance must be between 5 and 50 pixels.");
+            return;
+        }
         if (!TryParseCoordinate(CurrentRa, out double ra) || !TryParseCoordinate(CurrentDec, out double dec))
         {
             ShowError("Invalid Target RA or Dec format");
@@ -1164,7 +1187,11 @@ public partial class MainWindowViewModel : ObservableObject
             AutoCenterStatus = "Centering...";
             _autoCenterCts = new CancellationTokenSource();
             
-            var res = await _mountService.AutoCenterAsync(ra, dec, AutoCenterTolerance, _autoCenterCts.Token);
+            var res = await _mountService.AutoCenterAsync(
+                ra,
+                dec,
+                (double)AutoCenterTolerance.GetValueOrDefault(),
+                _autoCenterCts.Token);
             if (res.Success)
                 AutoCenterStatus = $"Centered in {res.Iterations} iters. Err: {res.FinalErrorPx:F1}px";
             else
@@ -1201,13 +1228,21 @@ public partial class MainWindowViewModel : ObservableObject
     private async Task AutoCalibrate()
     {
         if (_mountService is null) return;
+        if (AutoCalibrateAltSteps is not >= 2 and <= 10 ||
+            AutoCalibrateAzSteps is not >= 2 and <= 12)
+        {
+            ShowError("Alt steps must be 2-10 and Az steps must be 2-12.");
+            return;
+        }
         
         try
         {
             IsAutoCalibrating = true;
             AutoCalibrateStatus = "Calibrating (takes minutes)...";
             
-            var res = await _mountService.AutoCalibrateAsync(AutoCalibrateAltSteps, AutoCalibrateAzSteps);
+            var res = await _mountService.AutoCalibrateAsync(
+                (int)AutoCalibrateAltSteps.GetValueOrDefault(),
+                (int)AutoCalibrateAzSteps.GetValueOrDefault());
             AutoCalibrateStatus = $"{res.Message} (0/{res.TotalPositions})";
         }
         catch (Exception ex)
@@ -1250,6 +1285,13 @@ public partial class MainWindowViewModel : ObservableObject
         }
         else
         {
+            if (GuideInterval is not >= 10 and <= 300 ||
+                GuideMaxCorrections is not >= 0 and <= 999)
+            {
+                ShowError("Guide interval must be 10-300 seconds and max corrections must be 0-999.");
+                return;
+            }
+
             if (!TryParseCoordinate(CurrentRa, out double ra) || !TryParseCoordinate(CurrentDec, out double dec))
             {
                 ShowError("Invalid Target RA or Dec format");
@@ -1261,7 +1303,11 @@ public partial class MainWindowViewModel : ObservableObject
             {
                 IsGuiding = true;
                 GuideStatus = "Starting guiding...";
-                var res = await _mountService.GuideStartAsync(ra, dec, GuideInterval, GuideMaxCorrections);
+                var res = await _mountService.GuideStartAsync(
+                    ra,
+                    dec,
+                    (int)GuideInterval.GetValueOrDefault(),
+                    (int)GuideMaxCorrections.GetValueOrDefault());
                 GuideStatus = res.Message ?? "Guiding started.";
             }
             catch (Exception ex)

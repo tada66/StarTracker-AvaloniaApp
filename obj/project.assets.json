@@ -1662,36 +1662,29 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\tadeas\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "/Users/tada66/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\tadeas\\RiderProjects\\StarTracker-AvaloniaApp\\Star Tracker.csproj",
+      "projectUniqueName": "/Users/tada66/Code projects/StarTracker-AvaloniaApp/Star Tracker.csproj",
       "projectName": "Star Tracker",
-      "projectPath": "C:\\Users\\tadeas\\RiderProjects\\StarTracker-AvaloniaApp\\Star Tracker.csproj",
-      "packagesPath": "C:\\Users\\tadeas\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\tadeas\\RiderProjects\\StarTracker-AvaloniaApp\\obj\\",
+      "projectPath": "/Users/tada66/Code projects/StarTracker-AvaloniaApp/Star Tracker.csproj",
+      "packagesPath": "/Users/tada66/.nuget/packages/",
+      "outputPath": "/Users/tada66/Code projects/StarTracker-AvaloniaApp/obj/",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\tadeas\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/Users/tada66/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net9.0": {
+          "framework": "net9.0",
           "targetAlias": "net9.0",
           "projectReferences": {}
         }
@@ -1706,10 +1699,11 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
+        "framework": "net9.0",
         "targetAlias": "net9.0",
         "dependencies": {
           "Avalonia": {
@@ -1752,30 +1746,12 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[9.0.15, 9.0.15]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[9.0.15, 9.0.15]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Ref",
-            "version": "[9.0.15, 9.0.15]"
-          },
-          {
-            "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[9.0.15, 9.0.15]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.106/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.318/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
