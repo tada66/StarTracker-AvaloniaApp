@@ -280,6 +280,15 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private int _fanSpeed;
     [ObservableProperty] private bool _referenceLost;
     [ObservableProperty] private decimal _mountMoveRate = 5;
+    [ObservableProperty] private bool _isDemoMode;
+
+#if DEMO_MODE
+    private CancellationTokenSource? _demoModeCts;
+    private Task? _demoModeTask;
+
+    private const int DemoXLimitArcseconds = 45 * 3600;
+    private const int DemoZLimitArcseconds = 60 * 3600;
+#endif
 
     // Computed position displays (arcseconds → degrees)
     public string MountXDisplay => $"{MountX}″ ({MountX / 3600.0:F4}°)";
@@ -292,6 +301,19 @@ public partial class MainWindowViewModel : ObservableObject
     // Dynamic button text
     public string StopEnableButtonText => MotorsEnabled ? "STOP MOTORS" : "ENABLE MOTORS";
     public string PauseResumeButtonText => MotorsPaused ? "Resume movement" : "Pause movement";
+    public string DemoModeButtonText => IsDemoMode ? "STOP DEMO" : "DEMO MODE";
+    public bool DemoModeButtonVisible => MotorsEnabled && IsDemoModeAvailable;
+    private bool IsDemoModeAvailable
+    {
+        get
+        {
+#if DEMO_MODE
+            return true;
+#else
+            return false;
+#endif
+        }
+    }
 
     partial void OnMountXChanged(int value) => OnPropertyChanged(nameof(MountXDisplay));
     partial void OnMountYChanged(int value) => OnPropertyChanged(nameof(MountYDisplay));
@@ -302,12 +324,19 @@ public partial class MainWindowViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(MotorStateDisplay));
         OnPropertyChanged(nameof(StopEnableButtonText));
+        OnPropertyChanged(nameof(DemoModeButtonVisible));
+#if DEMO_MODE
+        if (!value)
+            _ = StopDemoModeAsync();
+#endif
     }
     partial void OnMotorsPausedChanged(bool value)
     {
         OnPropertyChanged(nameof(MotorStateDisplay));
         OnPropertyChanged(nameof(PauseResumeButtonText));
     }
+    partial void OnIsDemoModeChanged(bool value) =>
+        OnPropertyChanged(nameof(DemoModeButtonText));
 
     // ── Calibration / Alignment ──────────────────────────────────
 
@@ -844,6 +873,9 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (MotorsEnabled)
             {
+#if DEMO_MODE
+                await StopDemoModeAsync();
+#endif
                 await _mountService.StopAsync();
                 Debug.WriteLine("[ViewModel] Motors stopped");
             }
@@ -858,6 +890,109 @@ public partial class MainWindowViewModel : ObservableObject
             Debug.WriteLine($"[ViewModel] Stop/Enable motors failed: {ex.Message}");
         }
     }
+
+ #if DEMO_MODE
+    [RelayCommand]
+    private void ToggleDemoMode()
+    {
+        if (_mountService is null || !MotorsEnabled)
+            return;
+
+        if (IsDemoMode)
+        {
+            _demoModeCts?.Cancel();
+            return;
+        }
+
+        var cts = new CancellationTokenSource();
+        _demoModeCts = cts;
+        IsDemoMode = true;
+        _demoModeTask = RunDemoModeLifecycleAsync(cts);
+    }
+
+    private async Task RunDemoModeLifecycleAsync(CancellationTokenSource cts)
+    {
+        try
+        {
+            await RunDemoModeAsync(cts);
+        }
+        finally
+        {
+            if (ReferenceEquals(_demoModeCts, cts))
+            {
+                _demoModeCts = null;
+                _demoModeTask = null;
+                cts.Dispose();
+                IsDemoMode = false;
+            }
+        }
+    }
+
+    private async Task StopDemoModeAsync()
+    {
+        _demoModeCts?.Cancel();
+        var task = _demoModeTask;
+        if (task is null)
+            return;
+
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when the demo is stopped.
+        }
+    }
+
+    private async Task RunDemoModeAsync(CancellationTokenSource cts)
+    {
+        var ct = cts.Token;
+        int originX = Math.Max(0, MountX);
+        int originZ = MountZ;
+        int minX = Math.Max(0, originX - DemoXLimitArcseconds);
+        int maxX = originX + DemoXLimitArcseconds;
+        int minZ = originZ - DemoZLimitArcseconds;
+        int maxZ = originZ + DemoZLimitArcseconds;
+        int currentX = originX;
+        int currentZ = originZ;
+
+        try
+        {
+            while (true)
+            {
+                int xStep = Random.Shared.Next(8, 21) * 3600;
+                int zStep = Random.Shared.Next(10, 26) * 3600;
+                int nextX = Random.Shared.Next(2) == 0 ? currentX + xStep : currentX - xStep;
+                int nextZ = Random.Shared.Next(2) == 0 ? currentZ + zStep : currentZ - zStep;
+
+                // Absolute targets keep every X command at or above zero and bound the walk.
+                nextX = Math.Clamp(nextX, minX, maxX);
+                nextZ = Math.Clamp(nextZ, minZ, maxZ);
+
+                await _mountService!.MoveStaticAsync("x", nextX, ct);
+                await _mountService.MoveStaticAsync("z", nextZ, ct);
+                currentX = nextX;
+                currentZ = nextZ;
+
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // Normal demo shutdown.
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[ViewModel] Demo mode failed: {ex.Message}");
+        }
+    }
+#else
+    [RelayCommand]
+    private void ToggleDemoMode()
+    {
+    }
+#endif
 
     [RelayCommand]
     private async Task PauseResumeMovement()
@@ -1451,6 +1586,9 @@ public partial class MainWindowViewModel : ObservableObject
         _errorDismissCts?.Cancel();
         _errorDismissCts?.Dispose();
         _errorDismissCts = null;
+#if DEMO_MODE
+        _demoModeCts?.Cancel();
+#endif
 
         _cameraService.CameraStatusReceived -= OnCameraStatus;
         _cameraService.CaptureCompleteReceived -= OnCaptureComplete;
